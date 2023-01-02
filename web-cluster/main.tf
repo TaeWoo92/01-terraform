@@ -154,11 +154,21 @@ data "aws_subnets" "default" {
     values = [data.aws_vpc.default.id]
   }
 }
+data "terraform_remote_state" "db" {
+ backend="s3"
 
+ config = {
+  bucket = "std06-terraform-state"
+  key = "stage/data-stores/mysql/terraform.tfstate"
+  region = "ap-northeast-2"
+}
+}
 data "template_file" "web_output" {
   template = file("${path.module}/web.sh")
   vars = {
     server_port = "${var.server_port}"
+    db_address  = data.terraform_remote_state.db.outputs.address
+    db_port     = data.terraform_remote_state.db.outputs.port
   }
 }
 
